@@ -3,7 +3,7 @@ const connectionString = process.env.NODE_ENV === 'production' ? process.env.DAT
 
 const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false }
+    ssl: true
 });
 
 module.exports = {
