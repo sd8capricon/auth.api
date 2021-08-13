@@ -16,13 +16,24 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(passport.initialize());
 
-function extractToken(req, res, next){
+function verifyToken(req, res, next){  // Add this as a middleware to routes which need token verification
     let bearerHeader = req.headers.authorization;
     if (typeof bearerHeader !== undefined) {
         let bearer = bearerHeader.split(' ');
         const token = bearer[1];
         req.token = token
-        next();
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, done) => {
+            if (!err) {
+                res.json({
+                    done
+                });
+                next();
+            } else {
+                res.json({
+                    error: err
+                });
+            }
+        });
     } else {
         res.status(403);
     }
@@ -118,7 +129,7 @@ app.post('/api/users', (req, res) => {
             }
         } else {
             res.json({
-                err
+                error: err
             });
         }
     });
@@ -167,7 +178,7 @@ app.post('/api/login', (req, res, next) => {
                 token
             }); 
         } else {
-            res.json({err});
+            res.json({error: err});
         }
     })(req, res, next);
 });
@@ -188,18 +199,8 @@ app.get('/api/logout', (req, res) => {
 });
 
 // Verify Token
-app.get('/api/verify', extractToken, (req, res) => {
-   jwt.verify(req.token, process.env.JWT_SECRET, (err, done) => {
-       if (!err) {
-           res.json({
-               done
-           });
-       } else {
-           res.json({
-               err
-           });
-       }
-   }); 
+app.get('/api/verify', verifyToken, (req, res) => {
+    console.log('verify token test');
 });
 
 
