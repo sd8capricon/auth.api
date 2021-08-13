@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const app = express();  
 const PORT = process.env.PORT || 5000;
 const saltRounds = 10;
+const callbackURL = process.env.NODE_ENV === 'production' ? process.env.GOOGLE_CALLBACK_URL_PROD : GOOGLE_CALLBACK_URL_DEV
 
 // Middlewares
 app.use(express.json());
@@ -61,7 +62,7 @@ passport.use(new LocalStrategy(async (username, password, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/google/callback"
+    callbackURL: callbackURL+'/auth/google/callback'
 }, async (accessToken, refreshToken, profile, cb) => {
     try {
         const user = await db.query('SELECT * from users WHERE google_id=$1', [profile.id]);
