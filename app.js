@@ -10,7 +10,7 @@ const bcrypt = require('bcrypt');
 const app = express();  
 const PORT = process.env.PORT || 5000;
 const saltRounds = 10;
-const callbackURL = process.env.NODE_ENV === 'production' ? process.env.GOOGLE_CALLBACK_URL_PROD : GOOGLE_CALLBACK_URL_DEV
+const callbackURL = process.env.NODE_ENV === 'production' ? process.env.GOOGLE_CALLBACK_URL_PROD : process.env.GOOGLE_CALLBACK_URL_DEV
 
 // Middlewares
 app.use(express.json());
