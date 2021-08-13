@@ -5,9 +5,11 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const app = express();  
 const PORT = process.env.PORT || 5000;
+const saltRounds = 10;
 
 // Middlewares
 app.use(express.json());
@@ -30,13 +32,15 @@ passport.use(new LocalStrategy(async (username, password, done) => {
         try {
             const user = await db.query('SELECT * from users WHERE username=$1', [username]);
             if (user.rows.length==0) {
-                return done(null, false, {message: "Incorrect Username"});
+                return done(null, 'Incorrect Username or Password');
             } else {
-                if (user.rows[0].password == password) {
-                    return done(null, user.rows[0]);
-                } else {
-                    return done('Incorrect Password');
-                }
+                bcrypt.compare(password, user.rows[0].password, (err, result) => {
+                    if (!err) {
+                        return done(null, user.rows[0]);
+                    } else {
+                        return done(null, 'Incorrect Username or Password');
+                    }
+                });
             }
         } catch (error) {
             return done(error)
@@ -98,19 +102,26 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 // Create New User
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', (req, res) => {
     const {username, password} = req.body
-    try {
-        const user = await db.query('INSERT INTO users(username, password) VALUES ($1, $2) RETURNING id, username', [username, password]);
-        // console.log(user);
-        res.json({
-            user: user.rows[0]
-        });
-    } catch (error) {
-        res.json({
-            error
-        });
-    }
+    bcrypt.hash(password, saltRounds, async (err, hash) => {
+        if(!err){
+            try {
+                const user = await db.query('INSERT INTO users(username, password) VALUES ($1, $2) RETURNING id, username', [username, hash]);
+                res.json({
+                    user: user.rows[0]
+                });
+            } catch (error) {
+                res.json({
+                    error
+                });
+            }
+        } else {
+            res.json({
+                err
+            });
+        }
+    });
 });
 
 // Update User
