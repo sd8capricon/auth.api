@@ -1,5 +1,5 @@
 const {Pool} = require('pg');
-const connectionString = process.env.PG_URI;
+const connectionString = process.env.NODE_ENV === 'production' ? process.env.DATABASE_URL : process.env.PG_URI;
 
 const pool = new Pool({connectionString});
 
